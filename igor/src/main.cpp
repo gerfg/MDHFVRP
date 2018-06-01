@@ -152,7 +152,7 @@ void solve(Data& data){
 			}
 		}
 	}
-	
+
 	//The same vehicle that enters a node leaves the node (4)
 	for(int i = 0; i < (2*data.n); ++i){
 		for(int k = 0; k < data.v; ++k){
@@ -172,7 +172,7 @@ void solve(Data& data){
 					}
 				}
 
-				if(i >= data.n){	
+				if(i >= data.n){
 					expr1 += X[i][2*data.n+d][k][d]; //arc from delivery to depot
 				}
 
@@ -229,7 +229,7 @@ void solve(Data& data){
 				IloExpr expr1(env);
 				for(int k = 0; k < data.v; ++k){
 					for(int d = 0; d < data.m; ++d){
-						expr1 += X[i][j][k][d] + X[j][i][k][d];						
+						expr1 += X[i][j][k][d] + X[j][i][k][d];
 					}
 				}
 				IloRange r = ( expr1 <= 1);
@@ -237,11 +237,11 @@ void solve(Data& data){
 				sprintf(c, "c6_%d,%d", i, (i+data.n));
 				r.setName(c);
 				model.add(r);
-			}				
-		}		
+			}
+		}
 	}
 
-	
+
 	//Setting and checking visit time (7) (8)
 	for(int i = 0; i < (2*data.n); ++i){
 		for(int j = 0; j < data.V.size(); ++j){
@@ -258,7 +258,7 @@ void solve(Data& data){
 						model.add(r);
 					}
 				}
-			}			
+			}
 		}
 	}
 	//(8)
@@ -302,7 +302,7 @@ void solve(Data& data){
 		}
 	}
 
-	//The amount of flow inside in node less the amount that comes out must be equals to the demand (10)	
+	//The amount of flow inside in node less the amount that comes out must be equals to the demand (10)
 	for(int i = 0; i < data.V.size(); ++i){
 		IloExpr FC1(env);
 		IloExpr FC2(env);
@@ -342,7 +342,7 @@ void solve(Data& data){
 		model.add(r);
 
 	}
-	
+
 	IloCplex mdhdarp(model);
 	mdhdarp.exportModel("mdhdarp.lp");
 	mdhdarp.setParam(IloCplex::Threads, 1);
@@ -350,9 +350,9 @@ void solve(Data& data){
 	const IloArray<IloArray<IloArray<IloBoolVarArray>> >& x_ref = X;
 
 	// ***** CALLBACKS *****
-	MyLazyCallback* lazyCbk = new (env) MyLazyCallback(env, x_ref, &data); 
+	MyLazyCallback* lazyCbk = new (env) MyLazyCallback(env, x_ref, &data);
     mdhdarp.use(lazyCbk);
-    MyCutCallback* cutCbk = new (env) MyCutCallback(env, x_ref, &data); 
+    MyCutCallback* cutCbk = new (env) MyCutCallback(env, x_ref, &data);
     mdhdarp.use(cutCbk);
     MyBranchCallback* branchCbk = new (env) MyBranchCallback(env);
     mdhdarp.use(branchCbk);
@@ -372,8 +372,8 @@ void solve(Data& data){
 							//printf("time: %.2lf, vehicle capacity: %.2lf\n", mdhdarp.getValue(b[j][k][d]), mdhdarp.getValue(f[i][j]));
 							printf("X[%d][%d]: %.2lf ", i,j,mdhdarp.getValue(X[i][j][k][d]));
 						}
-							
-					} 
+
+					}
 				}
 				printf("\n");
 			}
@@ -386,11 +386,11 @@ void solve(Data& data){
 		for(int d = 0; d < data.m; ++d){
 			printf("Depot number %d\n", d);
 			for (int i = 0; i < data.V.size(); ++i){
-				for(int j = 0; j < data.V.size(); ++j){	
+				for(int j = 0; j < data.V.size(); ++j){
 					if(!data.A_[i][j]){
-						if(mdhdarp.getValue(X[i][j][k][d]) > 0.0001) 
+						if(mdhdarp.getValue(X[i][j][k][d]) > 0.0001)
 							printf("f[%d][%d]: %.2lf ", i,j, mdhdarp.getValue(f[i][j]));
-					}			
+					}
 				}
 				printf("\n");
 			}

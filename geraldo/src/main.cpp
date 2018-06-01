@@ -1,0 +1,284 @@
+#include <ilcplex/ilocplex.h>
+#include <iostream>
+#include "data.h"
+
+void solve(Data& data);
+
+int main(int argc, char **argv){
+  Data data(argv[1]);
+  // data.print();
+  solve(data);
+  return 0;
+}
+
+void solve(Data& data){
+  IloEnv env;
+	IloModel model(env, "MDHFVRP");
+
+  int limit = data.n+data.m;
+
+  IloArray <IloArray < IloArray< IloBoolVarArray > > > X (env, limit);
+  for (size_t i = 0; i < limit; i++) {
+    X[i] = IloArray <IloArray<IloBoolVarArray> > (env, limit);
+    for (size_t j = 0; j < limit; j++) {
+      X[i][j] = IloArray<IloBoolVarArray> (env, limit);
+      for (size_t k = 0; k < data.v; k++) {
+        X[i][j][k] = IloBoolVarArray(env, limit);
+        for (size_t d = data.n; d < limit; d++) {
+          char name[20];
+					sprintf(name, "X(%d,%d,%d,%d)", i, j, k, d);
+          X[i][j][k][d].setName(name);
+          model.add(X[i][j][k][d]);
+        }
+      }
+
+    }
+  }
+
+  IloExpr OBJ(env);
+  for (size_t i = data.n; i < limit; i++) {
+    for (size_t j = 0; j < data.n; j++) {
+      for (size_t k = 0; k < data.v; k++) {
+        for (size_t d = data.n; d < limit; d++) {
+          OBJ += 0 * X[i][j][k][d];
+        }
+      }
+    }
+  }
+
+  for (size_t i = 0; i < data.n; i++) {
+    for (size_t j = 0; j < data.n; j++) {
+      for (size_t k = 0; k < data.v; k++) {
+        for (size_t d = data.n; d < limit; d++) {
+          OBJ += data.matrixDist[i][j] * X[i][j][k][d];
+        }
+      }
+    }
+  }
+  model.add(IloMinimize(env, OBJ));
+
+  IloExpr expr(env);
+  // (2) cada cliente é visitado apenas uma vez
+  for (size_t j = 0; j < data.n; j++) {
+    for (size_t i = 0; i < limit; i++) {
+      for (size_t k = 0; k < data.v; k++) {
+        for (size_t d = data.n; d < limit; d++) {
+          expr += X[i][j][k][d];
+        }
+      }
+    }
+    IloRange r = (expr == 1);
+		char c[100];
+		sprintf(c, "c1_%d", j);
+		r.setName(c);
+		model.add(r);
+  }
+
+  // (3) conservação de fluxo
+  for (size_t i = 0; i < data.n; i++) {
+    for (size_t j = 0; j < limit; j++) {
+      for (size_t k = 0; k < data.v; k++) {
+        for (size_t d = data.n; d < limit; d++) {
+          expr += X[i][j][k][d];
+        }
+      }
+    }
+    IloRange r = (expr == 1);
+		char c[100];
+		sprintf(c, "c3_%d", i);
+		r.setName(c);
+		model.add(r);
+  }
+
+  // (4) um tio de veiculo deve cobrir o arco i,j
+  for (size_t k = 0; k < data.v; k++) {
+    IloExpr expr1(env);
+    IloExpr expr2(env);
+    for (size_t j = 0; j < limit; j++) {
+      for (size_t d = data.n; d < limit; d++) {
+
+        for (size_t i = 0; i < limit; i++) {
+          expr1 += X[i][j][k][d];
+        }
+
+        for (size_t i = 0; i < limit; i++) {
+          expr2 += X[j][i][k][d];
+        }
+
+      }
+    }
+    IloRange r = ((expr1 - expr2) == 0);
+		char c[100];
+		sprintf(c, "c4_%d", k);
+		r.setName(c);
+		model.add(r);
+  }
+
+  // (5) total de carga dos veiculos que sairam dos depots é igual
+  //     a demanda total dos clientes
+  for (size_t i = data.n; i < limit; i++) {
+    for (size_t j = 0; j < data.n; j++) {
+      IloExpr expr1(env);
+      IloExpr expr2(env);
+      // expr1 += Y[i][j];
+      for (size_t j = 0; j < data.n; j++) {
+        expr2 += data.customers[j];
+      }
+
+      IloRange r = ((expr1 - expr2) == 0);
+  		char c[100];
+  		sprintf(c, "c5_%d", i);
+  		r.setName(c);
+  		model.add(r);
+    }
+  }
+
+  // (6) carga no carro = carga ants de passar no cliente + demanda
+
+  for (size_t j = 0; j < data.n; j++) {
+    IloExpr expr1(env);
+    IloExpr expr2(env);
+
+    for (size_t i = 0; i < limit; i++) {
+      // expr1 += Y[i][j];
+      // expr2 += Y[j][i];
+    }
+    IloRange r = ((expr1 - expr2) == data.customers[j]);
+    char c[100];
+    sprintf(c, "c6_%d", j);
+    r.setName(c);
+    model.add(r);
+  }
+
+  // (7) não violação da carga do veiculo
+  for (size_t i = 0; i < limit; i++) {
+    for (size_t j = 0; j < data.n; j++) {
+
+      for (size_t k = 0; k < data.v; k++) {
+        for (size_t d = data.n; d < limit; d++) {
+          expr += data.capCars[k] * X[i][j][k][d];
+        }
+      }
+      // IloRange r = (expr <= Y[i][j] );
+      // char c[100];
+      // sprintf(c, "c7_%d", i);
+      // r.setName(c);
+      // model.add(r);
+    }
+  }
+
+  // (8)
+  for (size_t i = 0; i < data.n; i++) {
+    for (size_t k = 0; k < data.v; k++) {
+      for (size_t d1 = data.n; d1 < limit; d1++) {
+        for (size_t d2 = 0; d2 < limit; d2++) {
+          if (d1 != d2) {
+            expr += X[d1][i][k][d2];
+          }
+        }
+      }
+    }
+    IloRange r = (expr == 0);
+    char c[100];
+    sprintf(c, "c8_%d", i);
+    r.setName(c);
+    model.add(r);
+  }
+
+  // (9)
+  for (size_t i = 0; i < data.n; i++) {
+    for (size_t k = 0; k < data.v; k++) {
+      for (size_t d1 = data.n; d1 < limit; d1++) {
+        for (size_t d2 = 0; d2 < limit; d2++) {
+          if (d1 != d2) {
+            expr += X[i][d1][k][d2];
+          }
+        }
+      }
+    }
+    IloRange r = (expr == 0);
+    char c[100];
+    sprintf(c, "c9_%d", i);
+    r.setName(c);
+    model.add(r);
+  }
+
+  // (10) ?
+  for (size_t i = 0; i < limit; i++) {
+    for (size_t j = 0; j < limit; j++) {
+      for (size_t k = 0; k < data.v; k++) {
+        for (size_t d = data.n; d < limit; d++) {
+          // X[i][j][k][d] {0,1} ?
+        }
+      }
+    }
+  }
+
+  // (11)
+  for (size_t i = 0; i < limit; i++) {
+    for (size_t j = 0; j < limit; j++) {
+      // expr += Y[i][j]
+    }
+    IloRange r = (expr >= 0);
+    char c[100];
+    sprintf(c, "c9_%d", i);
+    r.setName(c);
+    model.add(r);
+  }
+
+  IloCplex mdhfvrp(model);
+	mdhfvrp.exportModel("mdhfvrp.lp");
+  mdhfvrp.setParam(IloCplex::Threads, 1);
+
+  mdhfvrp.solve();
+
+  double value = mdhfvrp.getObjValue();
+
+  // for(int k = 0; k < data.v; ++k){
+  //   std::cout << "Vehicle number " << k << '\n';
+	// 	for(int d = 0; d < data.m; ++d){
+  //     std::cout << "Depot number " << d << '\n';
+	// 		for(int i = 0; i < limit; ++i){
+	// 			for(int j = 0; j < limit; ++j){
+	// 						//printf("%d to %d,", i, j);
+	// 						//printf("time: %.2lf, vehicle capacity: %.2lf\n", mdhdarp.getValue(b[j][k][d]), mdhdarp.getValue(f[i][j]));
+  //             // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << '\n';
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+  std::cout << "\n\nOBJ " << value << std::endl;
+
+}
+
+/*
+o processo é o seguinte
+gera-se uma instância de brinquedo
+no arquivo
+
+aí implementa-se o leitor
+
+joga tudo num struct
+ou classe
+Data
+
+aí cria a função pra gerar o lp
+(e talvez rodar)
+
+aí passa lá o data pra função
+
+define as variaveis e cria a FO
+
+exporta o .lp
+
+checa
+se tem nexo
+
+depois joga o 1o grupo de restrições
+
+checa o .lp
+
+e assim por diante
+vai fazendo incrementalmente
+*/

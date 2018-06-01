@@ -1,0 +1,15 @@
+clientes tiposDeCarro QuantosDepositos
+
+car1 car2 car3 ... car-tiposDeCarro
+
+Carros em cada Deposito:
+|Quant car1 car3 |
+|Quant car2 car4 car5 |
+|Quant car3 car2 |
+
+Demand:
+dc1 dc2 dc3... dc-clientes
+
+matrixDist
+
+matrixTime
