@@ -6,7 +6,7 @@ void solve(Data& data);
 
 int main(int argc, char **argv){
   Data data(argv[1]);
-  // data.print();
+  data.print();
   solve(data);
   return 0;
 }
@@ -34,13 +34,14 @@ void solve(Data& data){
 
     }
   }
-
+  
+  // FO
   IloExpr OBJ(env);
   for (size_t i = data.n; i < limit; i++) {
     for (size_t j = 0; j < data.n; j++) {
       for (size_t k = 0; k < data.v; k++) {
         for (size_t d = data.n; d < limit; d++) {
-          OBJ += 0 * X[i][j][k][d];
+          OBJ += data.fixedCostCars[k] * X[i][j][k][d];
         }
       }
     }
@@ -50,6 +51,7 @@ void solve(Data& data){
     for (size_t j = 0; j < data.n; j++) {
       for (size_t k = 0; k < data.v; k++) {
         for (size_t d = data.n; d < limit; d++) {
+          // std::cout << "X["<< i << "][" << j << "][" << k << "][" << d << "]" << std::endl;
           OBJ += data.matrixDist[i][j] * X[i][j][k][d];
         }
       }
@@ -57,17 +59,18 @@ void solve(Data& data){
   }
   model.add(IloMinimize(env, OBJ));
 
-  IloExpr expr(env);
+  IloExpr expr1(env);
+  IloExpr expr2(env);
   // (2) cada cliente é visitado apenas uma vez
   for (size_t j = 0; j < data.n; j++) {
     for (size_t i = 0; i < limit; i++) {
       for (size_t k = 0; k < data.v; k++) {
         for (size_t d = data.n; d < limit; d++) {
-          expr += X[i][j][k][d];
+          expr1 += X[i][j][k][d];
         }
       }
     }
-    IloRange r = (expr == 1);
+    IloRange r = (expr1 == 1);
 		char c[100];
 		sprintf(c, "c1_%d", j);
 		r.setName(c);
@@ -79,21 +82,19 @@ void solve(Data& data){
     for (size_t j = 0; j < limit; j++) {
       for (size_t k = 0; k < data.v; k++) {
         for (size_t d = data.n; d < limit; d++) {
-          expr += X[i][j][k][d];
+          expr1 += X[i][j][k][d];
         }
       }
     }
-    IloRange r = (expr == 1);
+    IloRange r = (expr1 == 1);
 		char c[100];
 		sprintf(c, "c3_%d", i);
 		r.setName(c);
 		model.add(r);
   }
 
-  // (4) um tio de veiculo deve cobrir o arco i,j
+  // (4) um tipo de veiculo deve cobrir o arco i,j
   for (size_t k = 0; k < data.v; k++) {
-    IloExpr expr1(env);
-    IloExpr expr2(env);
     for (size_t j = 0; j < limit; j++) {
       for (size_t d = data.n; d < limit; d++) {
 
@@ -105,21 +106,19 @@ void solve(Data& data){
           expr2 += X[j][i][k][d];
         }
 
+        IloRange r = ((expr1 - expr2) == 0);
+    		char c[100];
+    		sprintf(c, "c4_%d", k);
+    		r.setName(c);
+    		model.add(r);
       }
     }
-    IloRange r = ((expr1 - expr2) == 0);
-		char c[100];
-		sprintf(c, "c4_%d", k);
-		r.setName(c);
-		model.add(r);
   }
 
   // (5) total de carga dos veiculos que sairam dos depots é igual
   //     a demanda total dos clientes
   for (size_t i = data.n; i < limit; i++) {
     for (size_t j = 0; j < data.n; j++) {
-      IloExpr expr1(env);
-      IloExpr expr2(env);
       // expr1 += Y[i][j];
       for (size_t j = 0; j < data.n; j++) {
         expr2 += data.customers[j];
@@ -136,9 +135,6 @@ void solve(Data& data){
   // (6) carga no carro = carga ants de passar no cliente + demanda
 
   for (size_t j = 0; j < data.n; j++) {
-    IloExpr expr1(env);
-    IloExpr expr2(env);
-
     for (size_t i = 0; i < limit; i++) {
       // expr1 += Y[i][j];
       // expr2 += Y[j][i];
@@ -156,10 +152,10 @@ void solve(Data& data){
 
       for (size_t k = 0; k < data.v; k++) {
         for (size_t d = data.n; d < limit; d++) {
-          expr += data.capCars[k] * X[i][j][k][d];
+          expr1 += data.capCars[k] * X[i][j][k][d];
         }
       }
-      // IloRange r = (expr <= Y[i][j] );
+      // IloRange r = (expr1 <= Y[i][j] );
       // char c[100];
       // sprintf(c, "c7_%d", i);
       // r.setName(c);
@@ -173,16 +169,16 @@ void solve(Data& data){
       for (size_t d1 = data.n; d1 < limit; d1++) {
         for (size_t d2 = 0; d2 < limit; d2++) {
           if (d1 != d2) {
-            expr += X[d1][i][k][d2];
+            expr1 += X[d1][i][k][d2];
           }
+          IloRange r = (expr1 == 0);
+          char c[100];
+          sprintf(c, "c8_%d", i);
+          r.setName(c);
+          model.add(r);
         }
       }
     }
-    IloRange r = (expr == 0);
-    char c[100];
-    sprintf(c, "c8_%d", i);
-    r.setName(c);
-    model.add(r);
   }
 
   // (9)
@@ -191,12 +187,12 @@ void solve(Data& data){
       for (size_t d1 = data.n; d1 < limit; d1++) {
         for (size_t d2 = 0; d2 < limit; d2++) {
           if (d1 != d2) {
-            expr += X[i][d1][k][d2];
+            expr1 += X[i][d1][k][d2];
           }
         }
       }
     }
-    IloRange r = (expr == 0);
+    IloRange r = (expr1 == 0);
     char c[100];
     sprintf(c, "c9_%d", i);
     r.setName(c);
@@ -217,9 +213,9 @@ void solve(Data& data){
   // (11)
   for (size_t i = 0; i < limit; i++) {
     for (size_t j = 0; j < limit; j++) {
-      // expr += Y[i][j]
+      // expr1 += Y[i][j]
     }
-    IloRange r = (expr >= 0);
+    IloRange r = (expr1 >= 0);
     char c[100];
     sprintf(c, "c9_%d", i);
     r.setName(c);
@@ -232,7 +228,7 @@ void solve(Data& data){
 
   mdhfvrp.solve();
 
-  double value = mdhfvrp.getObjValue();
+  // double value = mdhfvrp.getObjValue();
 
   // for(int k = 0; k < data.v; ++k){
   //   std::cout << "Vehicle number " << k << '\n';
@@ -248,7 +244,7 @@ void solve(Data& data){
 	// 	}
 	// }
 
-  std::cout << "\n\nOBJ " << value << std::endl;
+  // std::cout << "\n\nOBJ " << value << std::endl;
 
 }
 
