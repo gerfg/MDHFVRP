@@ -6,13 +6,18 @@
 #include <stdio.h>
 #include <fstream>
 
+struct vehicle {
+  int cap;
+  float fixed;
+  float variable;
+};
+
 class Data {
 public:
-  int n, v, m;
-  std::vector<int> capCars;
-  std::vector<float> fixedCostCars;
-  std::vector<std::vector<int> > depots;
-  std::vector<int> customers;
+  int n, v, m, maxCap;
+  std::vector<vehicle> vehiclesTypes;
+  std::vector<std::vector<int> > vehiclesInDepot;
+  std::vector<int> customersDemand;
   std::vector<std::vector<int> > matrixDist;
   std::vector<std::vector<int> > matrixTime;
 
