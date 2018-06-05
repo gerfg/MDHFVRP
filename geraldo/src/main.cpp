@@ -11,6 +11,8 @@ int main(int argc, char **argv){
   return 0;
 }
 
+// incluir 12 e 13
+
 void solve(Data& data){
   IloEnv env;
 	IloModel model(env, "MDHFVRP");
@@ -45,10 +47,12 @@ void solve(Data& data){
 	for(int i = 0; i < limit; i++){
 		f[i] = IloNumVarArray(env, limit, 0, data.maxCap);
 		for(int j = 0; j < limit; j++){
-			char name[20];
-			sprintf(name, "f(%d,%d)", i, j);
-			f[i][j].setName(name);
-			model.add(f[i][j]);
+      if (i != j) {
+        char name[20];
+  			sprintf(name, "f(%d,%d)", i, j);
+  			f[i][j].setName(name);
+  			model.add(f[i][j]);
+      }
 		}
 	}
 
@@ -138,7 +142,7 @@ void solve(Data& data){
 
         IloRange r = ((expr1 - expr2) == 0);
     		char c[100];
-    		sprintf(c, "c4_%d", k);
+    		sprintf(c, "c4_%d_%d_%d", k, j, d);
     		r.setName(c);
     		model.add(r);
       }
@@ -147,22 +151,20 @@ void solve(Data& data){
 
   // (5) total de carga dos veiculos que sairam dos depots é igual
   //     a demanda total dos clientes
+  // não tem forall
+  IloExpr expr1(env);
+  IloExpr expr2(env);
   for (size_t i = data.n; i < limit; i++) {
-    IloExpr expr1(env);
-    IloExpr expr2(env);
     for (size_t j = 0; j < data.n; j++) {
       expr1 += f[i][j];
-      for (size_t j = 0; j < data.n; j++) {
-        expr2 += data.customersDemand[j];
-      }
-
-      IloRange r = ((expr1 - expr2) == 0);
-  		char c[100];
-  		sprintf(c, "c5_%d", i);
-  		r.setName(c);
-  		model.add(r);
+      expr2 += data.customersDemand[j];
     }
   }
+  IloRange r = ((expr1 - expr2) == 0);
+  char c[100];
+  sprintf(c, "c5");
+  r.setName(c);
+  model.add(r);
 
   // (6) carga no carro = carga ants de passar no cliente + demanda
   for (size_t j = 0; j < data.n; j++) {
@@ -192,13 +194,13 @@ void solve(Data& data){
       }
       IloRange r = (expr1 - f[i][j] >= 0);
       char c[100];
-      sprintf(c, "c7_%d", i);
+      sprintf(c, "c7_%d_%d", i, j);
       r.setName(c);
       model.add(r);
     }
   }
 
-  // // (8)
+  // (8)
   // for (size_t i = 0; i < data.n; i++) {
   //   for (size_t k = 0; k < data.v; k++) {
   //     for (size_t d1 = data.n; d1 < limit; d1++) {
@@ -238,17 +240,63 @@ void solve(Data& data){
   //   model.add(r);
   // }
   //
-  // // (11)
-  // for (size_t i = 0; i < limit; i++) {
-  //   for (size_t j = 0; j < limit; j++) {
-  //     expr1 += f[i][j];
-  //   }
-  //   IloRange r = (expr1 >= 0);
-  //   char c[100];
-  //   sprintf(c, "c9_%d", i);
-  //   r.setName(c);
-  //   model.add(r);
-  // }
+  // (11)
+  for (size_t i = 0; i < limit; i++) {
+    for (size_t j = 0; j < limit; j++) {
+      if (i != j) {
+        IloExpr expr1(env);
+        expr1 += f[i][j];
+
+        IloRange r = (expr1 >= 0);
+        char c[100];
+        sprintf(c, "c11_%d_%d", i, j);
+        r.setName(c);
+        model.add(r);
+      }
+    }
+  }
+
+  // (12)
+  for (size_t i = 0; i < limit; i++) {
+    for (size_t j = 0; j < data.n; j++) {
+      IloExpr expr(env);
+      for (size_t d = data.n; d < limit; d++) {
+        for (size_t k = 0; k < data.v; k++) {
+          if ((data.vehiclesInDepot[d][k] > 0) && (i != j) && ((i < data.n) || (j < data.n))) {
+            expr += (data.vehiclesTypes[k].cap - data.customersDemand[i]) * X[i][j][k][d];
+          }
+        }
+      }
+      if (i != j) {
+        IloRange r = (expr - f[i][j] >= 0);
+        char c[100];
+        sprintf(c, "c12_%d_%d", i, j);
+        r.setName(c);
+        model.add(r);
+      }
+    }
+  }
+
+  // (13)
+  for (size_t i = 0; i < data.n; i++) {
+    for (size_t j = 0; j < data.n; j++) {
+      IloExpr expr(env);
+      for (size_t k = 0; k < data.v; k++) {
+        for (size_t d = data.n; d < limit; d++) {
+          if ((data.vehiclesInDepot[d][k] > 0) && (i != j) && ((i < data.n) || (j < data.n))) {
+            expr += data.customersDemand[j] * X[i][j][k][d];
+          }
+        }
+      }
+      if (i != j) {
+        IloRange r = (expr - f[i][j] <= 0);
+        char c[100];
+        sprintf(c, "c13_%d_%d", i, j);
+        r.setName(c);
+        model.add(r);
+      }
+    }
+  }
 
   IloCplex mdhfvrp(model);
 	mdhfvrp.exportModel("mdhfvrp.lp");
@@ -256,7 +304,7 @@ void solve(Data& data){
 
   mdhfvrp.solve();
 
-  double value = mdhfvrp.getObjValue();
+  // double value = mdhfvrp.getObjValue();
 
   // for(int k = 0; k < data.v; ++k){
   //   std::cout << "Vehicle number " << k << '\n';
@@ -264,15 +312,15 @@ void solve(Data& data){
   //     std::cout << "Depot number " << d << '\n';
 	// 		for(int i = 0; i < limit; ++i){
 	// 			for(int j = 0; j < limit; ++j){
-	// 						//printf("%d to %d,", i, j);
-	// 						//printf("time: %.2lf, vehicle capacity: %.2lf\n", mdhdarp.getValue(b[j][k][d]), mdhdarp.getValue(f[i][j]));
-  //             // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << '\n';
+	// 						// printf("%d to %d,", i, j);
+	// 						// printf("time: %.2lf, vehicle capacity: %.2lf\n", mdhdarp.getValue(b[j][k][d]), mdhdarp.getValue(f[i][j]));
+  //             std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << '\n';
 	// 			}
 	// 		}
 	// 	}
 	// }
 
-  std::cout << "\n\nOBJ " << value << std::endl;
+  std::cout << "\n\nOBJ " << mdhfvrp.getObjValue() << std::endl;
 
 }
 
