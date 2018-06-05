@@ -201,45 +201,47 @@ void solve(Data& data){
   }
 
   // (8)
-  // for (size_t i = 0; i < data.n; i++) {
-  //   for (size_t k = 0; k < data.v; k++) {
-  //     for (size_t d1 = data.n; d1 < limit; d1++) {
-  //       for (size_t d2 = 0; d2 < limit; d2++) {
-  //         if (d1 != d2) {
-  //           if ((data.vehiclesInDepot[k][d2] > 0) && (d1 != i) && ((d1 < data.n) || (i < data.n))) {
-  //             expr1 += X[d1][i][k][d2];
-  //           }
-  //         }
-  //         IloRange r = (expr1 == 0);
-  //         char c[100];
-  //         sprintf(c, "c8_%d", i);
-  //         r.setName(c);
-  //         model.add(r);
-  //       }
-  //     }
-  //   }
-  // }
+  for (size_t i = 0; i < data.n; i++) {
+    for (size_t k = 0; k < data.v; k++) {
+      for (size_t d1 = data.n; d1 < limit; d1++) {
+        for (size_t d2 = 0; d2 < limit; d2++) {
+          IloExpr expr1(env);
+          if (d1 != d2) {
+            if ((data.vehiclesInDepot[k][d2] > 0) && (d1 != i) && ((d1 < data.n) || (i < data.n))) {
+              expr1 += X[d1][i][k][d2];
+            }
+            IloRange r = (expr1 == 0);
+            char c[100];
+            sprintf(c, "c8_%d_%d_%d_%d", d1, i, k, d2);
+            r.setName(c);
+            model.add(r);
+          }
+        }
+      }
+    }
+  }
 
-  // // (9)
-  // for (size_t i = 0; i < data.n; i++) {
-  //   for (size_t k = 0; k < data.v; k++) {
-  //     for (size_t d1 = data.n; d1 < limit; d1++) {
-  //       for (size_t d2 = 0; d2 < limit; d2++) {
-  //         if (d1 != d2) {
-  //           if ((data.vehiclesInDepot[k][d2] > 0) && (i != d1) && ((i < data.n) || (d1 < data.n))) {
-  //             expr1 += X[i][d1][k][d2];
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  //   IloRange r = (expr1 == 0);
-  //   char c[100];
-  //   sprintf(c, "c9_%d", i);
-  //   r.setName(c);
-  //   model.add(r);
-  // }
-  //
+  // (9)
+  for (size_t i = 0; i < data.n; i++) {
+    for (size_t k = 0; k < data.v; k++) {
+      for (size_t d1 = data.n; d1 < limit; d1++) {
+        for (size_t d2 = 0; d2 < limit; d2++) {
+          IloExpr expr1(env);
+          if (d1 != d2) {
+            if ((data.vehiclesInDepot[k][d2] > 0) && (i != d1) && ((i < data.n) || (d1 < data.n))) {
+              expr1 += X[i][d1][k][d2];
+            }
+            IloRange r = (expr1 == 0);
+            char c[100];
+            sprintf(c, "c9_%d_%d_%d_%d", i, d1, k, d2);
+            r.setName(c);
+            model.add(r);
+          }
+        }
+      }
+    }
+  }
+
   // (11)
   for (size_t i = 0; i < limit; i++) {
     for (size_t j = 0; j < limit; j++) {
