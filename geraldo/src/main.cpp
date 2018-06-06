@@ -102,7 +102,7 @@ void solve(Data& data){
 		model.add(r);
   }
 
-  // (3) conservação de fluxo
+  // (3) 
   for (size_t i = 0; i < data.n; i++) {
     IloExpr expr1(env);
     for (size_t j = 0; j < limit; j++) {
@@ -192,11 +192,13 @@ void solve(Data& data){
           }
         }
       }
-      IloRange r = (expr1 - f[i][j] >= 0);
-      char c[100];
-      sprintf(c, "c7_%d_%d", i, j);
-      r.setName(c);
-      model.add(r);
+      if (i != j) {
+        IloRange r = (expr1 - f[i][j] >= 0);
+        char c[100];
+        sprintf(c, "c7_%d_%d", i, j);
+        r.setName(c);
+        model.add(r);
+      }
     }
   }
 
@@ -308,21 +310,27 @@ void solve(Data& data){
 
   // double value = mdhfvrp.getObjValue();
 
-  // for(int k = 0; k < data.v; ++k){
-  //   std::cout << "Vehicle number " << k << '\n';
-	// 	for(int d = 0; d < data.m; ++d){
-  //     std::cout << "Depot number " << d << '\n';
-	// 		for(int i = 0; i < limit; ++i){
-	// 			for(int j = 0; j < limit; ++j){
-	// 						// printf("%d to %d,", i, j);
-	// 						// printf("time: %.2lf, vehicle capacity: %.2lf\n", mdhdarp.getValue(b[j][k][d]), mdhdarp.getValue(f[i][j]));
-  //             std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << '\n';
-	// 			}
-	// 		}
-	// 	}
-	// }
+  for(int k = 0; k < data.v; ++k){
+    // std::cout << "Vehicle number " << k << '\n';
+		for(int d = data.n; d < limit; ++d){
+      // std::cout << "Depot number " << d << '\n';
+			for(int i = 0; i < limit; ++i){
+				for(int j = 0; j < limit; ++j){
+          if ((data.vehiclesInDepot[d][k] > 0) && (i != j) && ((i < data.n) || (j < data.n))) {
+						// printf("%d to %d,", i, j);
+						// printf("time: %.2lf, vehicle capacity: %.2lf\n", mdhdarp.getValue(b[j][k][d]), mdhdarp.getValue(f[i][j]));
+            if (mdhfvrp.getValue(X[i][j][k][d]) > 0) {
+              std::cout << i << " - " << j << " Veiculo: " << k << " do depot: " << d << '\n';
+              std::cout << "f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
+              // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << '\n';
+            }
+          }
+				}
+			}
+		}
+	}
 
-  std::cout << "\n\nOBJ " << mdhfvrp.getObjValue() << std::endl;
+  std::cout << "\nOBJ " << mdhfvrp.getObjValue() << std::endl;
 
 }
 
