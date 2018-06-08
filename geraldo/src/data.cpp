@@ -12,8 +12,8 @@ Data::Data(const char* path){
   vehiclesTypes.resize(v+1);
   vehiclesInDepot.resize(n+m+1, std::vector<int>(v+1));
   customersDemand.resize(n+1);
-  matrixDist.resize(n+m+1, std::vector<int>(n+m+1));
-  matrixTime.resize(n+m+1, std::vector<int>(n+m+1));
+  matrixDist.resize(n+m+1, std::vector<double>(n+m+1));
+  matrixTime.resize(n+m+1, std::vector<double>(n+m+1));
 
   for (size_t i = 1; i <= v; i++) {
     f >> vehiclesTypes[i].cap;
@@ -90,4 +90,5 @@ void Data::print(){
     }
     cout << endl;
   }
+  std::cout << "MaxCap: " << maxCap << '\n';
 }

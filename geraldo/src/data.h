@@ -18,8 +18,8 @@ public:
   std::vector<vehicle> vehiclesTypes;
   std::vector<std::vector<int> > vehiclesInDepot;
   std::vector<int> customersDemand;
-  std::vector<std::vector<int> > matrixDist;
-  std::vector<std::vector<int> > matrixTime;
+  std::vector<std::vector<double> > matrixDist;
+  std::vector<std::vector<double> > matrixTime;
 
   Data(const char* path);
   void print();
