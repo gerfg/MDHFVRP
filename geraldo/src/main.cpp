@@ -42,6 +42,21 @@ void solve(Data& data){
     }
   }
 
+  //Time variable
+	IloArray <IloArray <IloNumVarArray> > b(env, limit+1);
+	for (int i = 1; i < limit+1; ++i){
+		b[i] = IloArray<IloNumVarArray>(env, data.v+1);
+		for (int k = 1; k <= data.v; ++k){
+			b[i][k] = IloNumVarArray(env, limit+1, 0, IloInfinity);
+			for(int d = data.n+1; d <= limit; ++d){
+				char name[20];
+				sprintf(name, "b(%d,%d,%d)", i, k, d);
+				b[i][k][d].setName(name);
+				model.add(b[i][k][d]);
+			}
+		}
+	}
+
   // Flow variable
 	IloArray <IloNumVarArray>  f(env, limit+1);
 	for(int i = 1; i <= limit; i++){
@@ -377,6 +392,9 @@ void solve(Data& data){
     }
   }
 
+  // (7) TW
+
+
   IloCplex mdhfvrp(model);
 	mdhfvrp.exportModel("mdhfvrp.lp");
   mdhfvrp.setParam(IloCplex::Threads, 1);
@@ -386,22 +404,22 @@ void solve(Data& data){
   // double value = mdhfvrp.getObjValue();
 
   std::cout << '\n';
-  // for(int k = 1; k <= data.v; ++k){
-  //   // std::cout << "Vehicle number " << k << '\n';
-	// 	for(int d = data.n+1; d <= limit; ++d){
-  //     // std::cout << "Depot number " << d << '\n';
-	// 		for(int i = 1; i <= limit; ++i){
-	// 			for(int j = 1; j <= limit; ++j){
-  //         if ((data.vehiclesInDepot[d][k] > 0) && (i != j) && (i < data.n+1 || j < data.n+1)) {
-  //           if (mdhfvrp.getValue(X[i][j][k][d]) > 0) {
-  //             std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
-  //             // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
-  //           }
-  //         }
-	// 			}
-	// 		}
-	// 	}
-	// }
+  for(int k = 1; k <= data.v; ++k){
+    // std::cout << "Vehicle number " << k << '\n';
+		for(int d = data.n+1; d <= limit; ++d){
+      // std::cout << "Depot number " << d << '\n';
+			for(int i = 1; i <= limit; ++i){
+				for(int j = 1; j <= limit; ++j){
+          if ((data.vehiclesInDepot[d][k] > 0) && (i != j) && (i < data.n+1 || j < data.n+1)) {
+            if (mdhfvrp.getValue(X[i][j][k][d]) > 0) {
+              std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
+              // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
+            }
+          }
+				}
+			}
+		}
+	}
 
   std::cout << "\nOBJ " << mdhfvrp.getObjValue() << std::endl;
 

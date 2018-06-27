@@ -14,6 +14,7 @@ Data::Data(const char* path){
   customersDemand.resize(n+1);
   matrixDist.resize(n+m+1, std::vector<double>(n+m+1));
   matrixTime.resize(n+m+1, std::vector<double>(n+m+1));
+  timeWindow.resize(n+m+1);
 
   for (size_t i = 1; i <= v; i++) {
     f >> vehiclesTypes[i].cap;
@@ -29,6 +30,8 @@ Data::Data(const char* path){
 
   for (size_t i = 1; i <= n+m; i++) {
     f >> customersDemand[i];
+    f >> timeWindow[i].start;
+    f >> timeWindow[i].end;
   }
 
   for (size_t i = 1; i <= n+m; i++) {
@@ -60,7 +63,7 @@ void Data::print(){
     cout << "FixedCost: " << vehiclesTypes[i].fixed << " ";
     cout << "VariableCost: " << vehiclesTypes[i].variable << endl;
   }
-
+  cout << endl;
   for (size_t i = n+1; i <= n+m; i++) {
     cout << "Depot-" << i << " ";
     for (size_t j = 1; j <= v; j++) {
@@ -68,10 +71,12 @@ void Data::print(){
     }
     cout << endl;
   }
-
-  cout << ">Customers Demand: ";
+  cout << endl;
+  cout << ">Customers Demand: \n";
   for (size_t i = 1; i <= n+m; i++) {
-    cout << customersDemand[i] << " ";
+    cout << "Demand: " << customersDemand[i] << " timeWindow ";
+    cout << timeWindow[i].start << " - ";
+    cout << timeWindow[i].end << "\n";
   }
   cout << endl;
 
@@ -82,7 +87,7 @@ void Data::print(){
     }
     cout << endl;
   }
-
+  cout << endl;
   cout << "matrixTime:" << endl;
   for (size_t i = 1; i <= n+m; i++) {
     for (size_t j = 1; j <= n+m; j++) {

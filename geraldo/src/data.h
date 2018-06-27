@@ -12,6 +12,11 @@ struct vehicle {
   float variable;
 };
 
+struct tw {
+  int start;
+  int end;
+};
+
 class Data {
 public:
   int n, v, m, maxCap;
@@ -20,6 +25,7 @@ public:
   std::vector<int> customersDemand;
   std::vector<std::vector<double> > matrixDist;
   std::vector<std::vector<double> > matrixTime;
+  std::vector<tw> timeWindow;
 
   Data(const char* path);
   void print();
