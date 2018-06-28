@@ -18,6 +18,7 @@ void solve(Data& data){
 	IloModel model(env, "MDHFVRP");
 
   int limit = data.n+data.m;
+  int bigM = 99999;
 
   // Decision variable
   IloArray <IloArray < IloArray< IloBoolVarArray > > > X (env, limit+1);
@@ -44,10 +45,10 @@ void solve(Data& data){
 
   //Time variable
 	IloArray <IloArray <IloNumVarArray> > b(env, limit+1);
-	for (int i = 1; i < limit+1; ++i){
+	for (int i = 1; i <= limit; ++i){
 		b[i] = IloArray<IloNumVarArray>(env, data.v+1);
 		for (int k = 1; k <= data.v; ++k){
-			b[i][k] = IloNumVarArray(env, limit+1, 0, IloInfinity);
+			b[i][k] = IloNumVarArray(env, limit+1, data.timeWindow[i].start, data.timeWindow[i].end);
 			for(int d = data.n+1; d <= limit; ++d){
 				char name[20];
 				sprintf(name, "b(%d,%d,%d)", i, k, d);
@@ -392,7 +393,31 @@ void solve(Data& data){
     }
   }
 
-  // (7) TW
+  // (19) TW
+  for (size_t i = 1; i <= limit; i++) {
+    for (size_t j = 1; j <= limit; j++) {
+      for (size_t k = 1; k <= data.v; k++) {
+        for (size_t d = data.n+1; d <= limit; d++) {
+          IloExpr expr(env);
+
+          expr = b[i][k][d] + data.matrixTime[i][j] - bigM * (1 - X[i][j][k][d]);
+
+          IloRange r = ( (b[j][k][d] - expr) >= 0 );
+      		char c[100];
+      		sprintf(c, "c19_%d_%d_%d_%d", i, j, k, d);
+      		r.setName(c);
+      		model.add(r);
+        }
+      }
+    }
+  }
+
+  // (20)
+  // for (size_t i = 1; i <= data.n; i++) {
+  //   for (size_t i = 0; i < count; i++) {
+  //     /* code */
+  //   }
+  // }
 
 
   IloCplex mdhfvrp(model);
