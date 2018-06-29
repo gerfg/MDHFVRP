@@ -11,8 +11,6 @@ int main(int argc, char **argv){
   return 0;
 }
 
-// incluir 12 e 13
-
 void solve(Data& data){
   IloEnv env;
 	IloModel model(env, "MDHFVRP");
@@ -44,18 +42,26 @@ void solve(Data& data){
   }
 
   //Time variable
-	IloArray <IloArray <IloNumVarArray> > b(env, limit+1);
+	// IloArray <IloArray <IloNumVarArray> > b(env, limit+1);
+	// for (int i = 1; i <= limit; ++i){
+	// 	b[i] = IloArray<IloNumVarArray>(env, data.v+1);
+	// 	for (int k = 1; k <= data.v; ++k){
+	// 		b[i][k] = IloNumVarArray(env, limit+1, data.timeWindow[i].start, data.timeWindow[i].end);
+	// 		for(int d = data.n+1; d <= limit; ++d){
+	// 			char name[20];
+	// 			sprintf(name, "b(%d,%d,%d)", i, k, d);
+	// 			b[i][k][d].setName(name);
+	// 			model.add(b[i][k][d]);
+	// 		}
+	// 	}
+	// }
+
+  IloNumVarArray b(env, limit+1, 0, 99999);
 	for (int i = 1; i <= limit; ++i){
-		b[i] = IloArray<IloNumVarArray>(env, data.v+1);
-		for (int k = 1; k <= data.v; ++k){
-			b[i][k] = IloNumVarArray(env, limit+1, data.timeWindow[i].start, data.timeWindow[i].end);
-			for(int d = data.n+1; d <= limit; ++d){
-				char name[20];
-				sprintf(name, "b(%d,%d,%d)", i, k, d);
-				b[i][k][d].setName(name);
-				model.add(b[i][k][d]);
-			}
-		}
+		char name[20];
+		sprintf(name, "b(%d)", i);
+		b[i].setName(name);
+		model.add(b[i]);
 	}
 
   // Flow variable
@@ -177,8 +183,12 @@ void solve(Data& data){
         expr1 += f[i][j];
         expr2 += data.customersDemand[j];
       // }
+      std::cout << "f[i][j] " << f[i][j] << '\n';
+      // std::cout << "demand[j] " << data.customersDemand[j] << '\n';
     }
   }
+  std::cout << expr1 << '\n';
+  std::cout << expr2 << '\n';
   IloRange r = ((expr1 - expr2) == 0);
   char c[100];
   sprintf(c, "c5");
@@ -396,28 +406,41 @@ void solve(Data& data){
   // (19) TW
   for (size_t i = 1; i <= limit; i++) {
     for (size_t j = 1; j <= limit; j++) {
-      for (size_t k = 1; k <= data.v; k++) {
-        for (size_t d = data.n+1; d <= limit; d++) {
-          IloExpr expr(env);
+          IloExpr expr1(env);
+          IloExpr expr2(env);
 
-          expr = b[i][k][d] + data.matrixTime[i][j] - bigM * (1 - X[i][j][k][d]);
+          expr1 = b[i] + data.matrixTime[i][j];
 
-          IloRange r = ( (b[j][k][d] - expr) >= 0 );
+          for (size_t k = 1; k <= data.v; k++) {
+            for (size_t d = data.n+1; d <= limit; d++) {
+              expr2 += bigM * (1 - X[i][j][k][d]);
+            }
+          }
+
+          IloRange r = ( (b[j] - (expr1 - expr2) ) >= 0 );
       		char c[100];
-      		sprintf(c, "c19_%d_%d_%d_%d", i, j, k, d);
+      		sprintf(c, "c19_%d_%d", i, j);
       		r.setName(c);
       		model.add(r);
-        }
-      }
     }
   }
 
   // (20)
-  // for (size_t i = 1; i <= data.n; i++) {
-  //   for (size_t i = 0; i < count; i++) {
-  //     /* code */
-  //   }
-  // }
+  for (size_t i = 1; i <= data.n; i++) {
+    IloRange r = (b[i] >= data.timeWindow[i].start);
+    char c[100];
+    sprintf(c, "c20_%d", i);
+    r.setName(c);
+    model.add(r);
+  }
+  // (21)
+  for (size_t i = 1; i <= data.n; i++) {
+    IloRange r = (b[i] <= data.timeWindow[i].end);
+    char c[100];
+    sprintf(c, "c21_%d", i);
+    r.setName(c);
+    model.add(r);
+  }
 
 
   IloCplex mdhfvrp(model);

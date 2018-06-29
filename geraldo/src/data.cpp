@@ -11,7 +11,7 @@ Data::Data(const char* path){
 
   vehiclesTypes.resize(v+1);
   vehiclesInDepot.resize(n+m+1, std::vector<int>(v+1));
-  customersDemand.resize(n+1);
+  customersDemand.resize(n+m+1);
   matrixDist.resize(n+m+1, std::vector<double>(n+m+1));
   matrixTime.resize(n+m+1, std::vector<double>(n+m+1));
   timeWindow.resize(n+m+1);
