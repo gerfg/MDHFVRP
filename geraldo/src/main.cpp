@@ -426,7 +426,7 @@ void solve(Data& data){
   }
 
   // (20)
-  for (size_t i = 1; i <= data.n; i++) {
+  for (size_t i = 1; i <= limit; i++) {
     IloRange r = (b[i] >= data.timeWindow[i].start);
     char c[100];
     sprintf(c, "c20_%d", i);
@@ -434,7 +434,7 @@ void solve(Data& data){
     model.add(r);
   }
   // (21)
-  for (size_t i = 1; i <= data.n; i++) {
+  for (size_t i = 1; i <= limit; i++) {
     IloRange r = (b[i] <= data.timeWindow[i].end);
     char c[100];
     sprintf(c, "c21_%d", i);
@@ -453,17 +453,14 @@ void solve(Data& data){
 
   std::cout << '\n';
   for(int k = 1; k <= data.v; ++k){
-    // std::cout << "Vehicle number " << k << '\n';
 		for(int d = data.n+1; d <= limit; ++d){
-      // std::cout << "Depot number " << d << '\n';
 			for(int i = 1; i <= limit; ++i){
 				for(int j = 1; j <= limit; ++j){
-          if ((data.vehiclesInDepot[d][k] > 0) && (i != j) && (i < data.n+1 || j < data.n+1)) {
             if (mdhfvrp.getValue(X[i][j][k][d]) > 0) {
-              std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
+              std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << /*" - " << mdhfvrp.getValue(b[j]) <<*/ '\n';
               // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
             }
-          }
+
 				}
 			}
 		}
