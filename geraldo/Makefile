@@ -17,8 +17,8 @@ ifeq ($(SYS),Darwin)
 	CPLEXDIR      = /Users/VitorVesello/ILOG/CPLEX_Studio126/cplex
 	CONCERTDIR    = /Users/VitorVesello/ILOG/CPLEX_Studio126/concert
 else
-	CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio127/cplex
-	CONCERTDIR    = /opt/ibm/ILOG/CPLEX_Studio127/concert
+	CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
+	CONCERTDIR    = /opt/ibm/ILOG/CPLEX_Studio1271/concert
 endif
 
 CPLEXLIBDIR   = $(CPLEXDIR)/lib/$(SYSTEM)/$(LIBFORMAT)

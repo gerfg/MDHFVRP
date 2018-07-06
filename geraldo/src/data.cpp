@@ -15,6 +15,7 @@ Data::Data(const char* path){
   matrixDist.resize(n+m+1, std::vector<double>(n+m+1));
   matrixTime.resize(n+m+1, std::vector<double>(n+m+1));
   timeWindow.resize(n+m+1);
+  route.resize(n+m+1, std::vector<int>(3) );
 
   for (size_t i = 1; i <= v; i++) {
     f >> vehiclesTypes[i].cap;
@@ -96,4 +97,20 @@ void Data::print(){
     cout << endl;
   }
   std::cout << "MaxCap: " << maxCap << '\n';
+}
+
+void Data::printRoute(){
+  for (size_t i = 1; i <= n+m; i++) {
+    for (size_t j = 1; j <= 2; j++) {
+      // std::cout << route[i][j] << " ";
+    }
+    // std::cout << '\n';
+  }
+
+  int position = n+1;
+  for (size_t i = 1; i <= n+m; i++) {
+    std::cout << route[position][1] << " (B: ";
+    position = route[position][2];
+  }
+
 }

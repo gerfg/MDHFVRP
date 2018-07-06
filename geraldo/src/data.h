@@ -26,9 +26,11 @@ public:
   std::vector<std::vector<double> > matrixDist;
   std::vector<std::vector<double> > matrixTime;
   std::vector<tw> timeWindow;
+  std::vector<std::vector<int> > route;
 
   Data(const char* path);
   void print();
+  void printRoute();
 };
 
 #endif
