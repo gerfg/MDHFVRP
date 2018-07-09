@@ -174,8 +174,8 @@ void solve(Data& data){
     }
   }
 
-  // // (5) total de carga dos veiculos que sairam dos depots é igual
-  // //     a demanda total dos clientes
+  // (5) total de carga dos veiculos que sairam dos depots é igual
+  //     a demanda total dos clientes
   IloExpr expr1(env);
   IloExpr expr2(env);
   for (int i = data.n+1; i <= limit; i++) {
@@ -184,12 +184,9 @@ void solve(Data& data){
         expr1 += f[i][j];
         expr2 += data.customersDemand[j];
       // }
-      // std::cout << "f[i][j] " << f[i][j] << '\n';
-      // std::cout << "demand[j] " << data.customersDemand[j] << '\n';
     }
   }
-  std::cout << expr1 << '\n';
-  std::cout << expr2 << '\n';
+
   IloRange r = ((expr1 - expr2) == 0);
   char c[100];
   sprintf(c, "c5");
@@ -241,8 +238,8 @@ void solve(Data& data){
     for (int k = 1; k <= data.v; k++) {
       for (int d1 = data.n+1; d1 <= limit; d1++) {
         for (int d2 = data.n+1; d2 <= limit; d2++) {
-          IloExpr expr1(env);
           if (d1 != d2) {
+            IloExpr expr1(env);
             // if ((data.vehiclesInDepot[d2][k] > 0) && (d1 != i) && (d1 < data.n+1 || i < data.n+1)) {
               expr1 += X[d1][i][k][d2];
               IloRange r = (expr1 == 0);
@@ -262,8 +259,8 @@ void solve(Data& data){
     for (int k = 1; k <= data.v; k++) {
       for (int d1 = data.n+1; d1 <= limit; d1++) {
         for (int d2 = data.n+1; d2 <= limit; d2++) {
-          IloExpr expr1(env);
           if (d1 != d2) {
+            IloExpr expr1(env);
               // if ((data.vehiclesInDepot[d2][k] > 0) && (i != d1) && (i < data.n+1 || d1 < data.n+1)) {
               expr1 += X[i][d1][k][d2];
               IloRange r = (expr1 == 0);
@@ -326,7 +323,7 @@ void solve(Data& data){
         }
       }
       // if ((i != j) && (i < data.n+1 || j < data.n+1)) {
-        IloRange r = (expr - f[i][j] <= 0);
+        IloRange r = (f[i][j] - expr >= 0);
         char c[100];
         sprintf(c, "c13_%d_%d", i, j);
         r.setName(c);
@@ -455,20 +452,19 @@ void solve(Data& data){
 		for(int d = data.n+1; d <= limit; ++d){
 			for(int i = 1; i <= limit; ++i){
 				for(int j = 1; j <= limit; ++j){
-            if (mdhfvrp.getValue(X[i][j][k][d]) > 0) {
-              data.route[i][1] = i;
-              data.route[i][2] = j;
-              // std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << /*" - " << mdhfvrp.getValue(b[j]) <<*/ '\n';
-              // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
-            }
-
+          if (mdhfvrp.getValue(X[i][j][k][d]) > 0) {
+            std::cerr << "here " << i << " " << j << '\n';
+            data.route[i][1] = i;
+            data.route[i][2] = j;
+            // std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << /*" - " << mdhfvrp.getValue(b[j]) <<*/ '\n';
+            // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
+          }
 				}
 			}
 		}
 	}
 
   std::cout << '\n';
-
   // Print only Route
   int position = data.n+1;
   for (size_t i = 1; i <= limit; i++) {

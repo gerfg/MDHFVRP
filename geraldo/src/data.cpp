@@ -96,7 +96,7 @@ void Data::print(){
     }
     cout << endl;
   }
-  std::cout << "MaxCap: " << maxCap << '\n';
+  std::cout << "\nMaxCap: " << maxCap << "\n\n";
 }
 
 void Data::printRoute(){
