@@ -42,6 +42,7 @@ void solve(Data& data){
   }
 
   //Time variable
+
 	// IloArray <IloArray <IloNumVarArray> > b(env, limit+1);
 	// for (int i = 1; i <= limit; ++i){
 	// 	b[i] = IloArray<IloNumVarArray>(env, data.v+1);
@@ -183,7 +184,7 @@ void solve(Data& data){
         expr1 += f[i][j];
         expr2 += data.customersDemand[j];
       // }
-      std::cout << "f[i][j] " << f[i][j] << '\n';
+      // std::cout << "f[i][j] " << f[i][j] << '\n';
       // std::cout << "demand[j] " << data.customersDemand[j] << '\n';
     }
   }
@@ -407,19 +408,16 @@ void solve(Data& data){
   for (int i = 1; i <= limit; i++) {
     for (int j = 1; j <= limit; j++) {
       if (i != j) {
-        IloExpr expr1(env);
-        IloExpr expr2(env);
+        IloExpr expr(env);
 
-        // expr1 = b[i] + data.matrixTime[i][j];
         for (int k = 1; k <= data.v; k++) {
           for (int d = data.n+1; d <= limit; d++) {
-             expr1 += X[i][j][k][d];
+             expr += X[i][j][k][d];
           }
         }
 
-        expr2 += bigM*(1-expr1);
         // IloRange r = ( (b[j] - (expr1 - expr2) ) >= 0 );
-        IloRange r = ( (b[j] - ( b[i] + data.matrixTime[i][j] - expr2 )  ) >= 0 );
+        IloRange r = ( (b[j] - ( b[i] + data.matrixTime[i][j] - bigM*(1-expr) )  ) >= 0 );
         char c[100];
         sprintf(c, "c19_%d_%d", i, j);
         r.setName(c);
@@ -504,9 +502,9 @@ void solve(Data& data){
 
 
   // std::cout << '\n' << "B" << '\n';
-  for (size_t i = 1; i <= data.n; i++) {
-    // std::cout << i << " : " << mdhfvrp.getValue(b[i]) << "\n";
-  }
+  // for (size_t i = 1; i <= data.n; i++) {
+  //   std::cout << i << " : " << mdhfvrp.getValue(b[i]) << "\n";
+  // }
 
   std::cout << "\nOBJ " << mdhfvrp.getObjValue() << std::endl;
 
