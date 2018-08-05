@@ -16,7 +16,7 @@ void solve(Data& data){
 	IloModel model(env, "MDHFVRP");
 
   int limit = data.n+data.m;
-  int bigM = 99999999;
+  long long int bigM = 99999999999;
 
   // Decision variable
   IloArray <IloArray < IloArray< IloBoolVarArray > > > X (env, limit+1);
@@ -451,7 +451,7 @@ void solve(Data& data){
           if (mdhfvrp.getValue(X[i][j][k][d]) > 0) {
             data.route[i][1] = i;
             data.route[i][2] = j;
-            // std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << /*" - " << mdhfvrp.getValue(b[j]) <<*/ '\n';
+            std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << /*" - " << mdhfvrp.getValue(b[j]) <<*/ '\n';
             // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
           }
 				}
