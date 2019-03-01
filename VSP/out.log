@@ -1,0 +1,121 @@
+>carTypes: 
+car1> cap: 99999999 FixedCost: 250 VariableCost: 10
+car2> cap: 99999999 FixedCost: 470 VariableCost: 20
+
+Depot-6 v1: 1 v2: 0 
+Depot-7 v1: 0 v2: 1 
+
+>Customers Demand: 
+Demand: 1 timeWindow 600 - 1600
+Demand: 1 timeWindow 400 - 1500
+Demand: 1 timeWindow 460 - 900
+Demand: 1 timeWindow 640 - 1800
+Demand: 1 timeWindow 0 - 1500
+Demand: 0 timeWindow 0 - 10000
+Demand: 0 timeWindow 0 - 10000
+
+matrixDist:
+0 712.6 113.2 150.1 134.9 635.9 550.8 
+773.6 0 710.3 711 716.1 194.5 291.1 
+113.2 649.3 0 79 27.8 572.6 487.5 
+150.1 643.4 79 0 106.8 566.7 481.6 
+138.2 651.8 31.1 110.1 0 575.1 490 
+645.3 143.8 582 582.7 587.8 0 162.8 
+482.5 273.3 419.2 419.9 425 196.6 0 
+
+matrixTime:
+0 712.6 113.2 150.1 134.9 635.9 550.8 
+773.6 0 710.3 711 716.1 194.5 291.1 
+113.2 649.3 0 79 27.8 572.6 487.5 
+150.1 643.4 79 0 106.8 566.7 481.6 
+138.2 651.8 31.1 110.1 0 575.1 490 
+645.3 143.8 582 582.7 587.8 0 162.8 
+482.5 273.3 419.2 419.9 425 196.6 0 
+
+MaxCap: 99999999
+
+arcsX[1][2][2][7]
+arcsX[1][3][2][7]
+arcsX[1][4][2][7]
+arcsX[1][7][2][7]
+arcsX[2][1][2][7]
+arcsX[2][3][2][7]
+arcsX[2][4][2][7]
+arcsX[2][7][2][7]
+arcsX[3][1][2][7]
+arcsX[3][2][2][7]
+arcsX[3][4][2][7]
+arcsX[3][7][2][7]
+arcsX[4][1][2][7]
+arcsX[4][2][2][7]
+arcsX[4][3][2][7]
+arcsX[4][7][2][7]
+arcsX[5][6][1][6]
+arcsX[6][5][1][6]
+arcsX[7][1][2][7]
+arcsX[7][2][2][7]
+arcsX[7][3][2][7]
+arcsX[7][4][2][7]
+
+arcsY[1][2]
+arcsY[1][3]
+arcsY[1][4]
+arcsY[1][5]
+arcsY[2][1]
+arcsY[2][3]
+arcsY[2][4]
+arcsY[2][5]
+arcsY[3][1]
+arcsY[3][2]
+arcsY[3][4]
+arcsY[3][5]
+arcsY[4][1]
+arcsY[4][2]
+arcsY[4][3]
+arcsY[4][5]
+arcsY[5][1]
+arcsY[5][2]
+arcsY[5][3]
+arcsY[5][4]
+arcsY[6][1]
+arcsY[6][2]
+arcsY[6][3]
+arcsY[6][4]
+arcsY[6][5]
+arcsY[7][1]
+arcsY[7][2]
+arcsY[7][3]
+arcsY[7][4]
+arcsY[7][5]
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Strategy_CallbackReducedLP          0
+Tried aggregator 2 times.
+MIP Presolve eliminated 74 rows and 12 columns.
+MIP Presolve modified 110 coefficients.
+Aggregator did 4 substitutions.
+Reduced MIP has 47 rows, 43 columns, and 155 nonzeros.
+Reduced MIP has 15 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.22 ticks)
+Probing time = 0.00 sec. (0.03 ticks)
+Tried aggregator 1 time.
+Reduced MIP has 47 rows, 43 columns, and 155 nonzeros.
+Reduced MIP has 15 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.08 ticks)
+Probing time = 0.00 sec. (0.03 ticks)
+Clique table members: 12.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Root relaxation solution time = 0.00 sec. (0.06 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0    infeasible                                          6         
+
+Root node processing (before b&c):
+  Real time             =    0.00 sec. (0.59 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.00 sec. (0.59 ticks)

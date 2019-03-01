@@ -1,26 +1,29 @@
 #include "data.h"
 
-using namespace std;
-
 Data::Data(const char* path){
-  std::ifstream f(path);
+  ifstream f(path);
 
   f >> n;
   f >> v;
   f >> m;
 
   vehiclesTypes.resize(v+1);
-  vehiclesInDepot.resize(n+m+1, std::vector<int>(v+1));
+  vehiclesInDepot.resize(n+m+1, vector<int>(v+1));
   customersDemand.resize(n+m+1);
-  matrixDist.resize(n+m+1, std::vector<double>(n+m+1));
-  matrixTime.resize(n+m+1, std::vector<double>(n+m+1));
+  clientType.resize(n+m+1);
+  matrixDist.resize(n+m+1, vector<double>(n+m+1));
+  matrixTime.resize(n+m+1, vector<double>(n+m+1));
   timeWindow.resize(n+m+1);
-  route.resize(n+m+1, std::vector<int>(3) );
+  route.resize(n+m+1, vector<int>(3));
+
+  arcsX.resize(n+m+1, vector<vector<vector<bool>>>(n+m+1, vector<vector<bool>>(v+1, vector<bool>(m+1, false))));
+  arcsY.resize(n+m+1, vector<bool>(n+m+1, false));
 
   for (size_t i = 1; i <= v; i++) {
     f >> vehiclesTypes[i].cap;
     f >> vehiclesTypes[i].fixed;
     f >> vehiclesTypes[i].variable;
+    f >> vehiclesTypes[i].type;
   }
 
   for (size_t i = n+1; i <= n+m; i++) {
@@ -33,6 +36,7 @@ Data::Data(const char* path){
     f >> customersDemand[i];
     f >> timeWindow[i].start;
     f >> timeWindow[i].end;
+    f >> clientType[i];
   }
 
   for (size_t i = 1; i <= n+m; i++) {
@@ -54,6 +58,83 @@ Data::Data(const char* path){
     }
   }
 
+}
+
+void Data::calcArcs() {
+  for(int i = 1; i <= n+m; i++) {
+    for(int j = 1; j <= n+m; j++) {
+      
+      if (i == j) {
+        continue;
+      }
+      
+      for(int k = 1; k <= v; k++) {
+        for(int d = n+1; d <= n+m; d++) {
+          
+          if (vehiclesInDepot[d][k] == 0) {
+            continue;
+          }
+          
+          if ((i <= n && j <= n)
+              && (clientType[i] == vehiclesTypes[k].type)
+              && (clientType[j] == vehiclesTypes[k].type)
+          ) {
+            arcsX[i][j][k][d] = true;
+          }
+
+          if ((i > n && j <= n)
+              && (clientType[j] == vehiclesTypes[k].type)
+              && (i == d)
+          ) {
+            arcsX[i][j][k][d] = true;
+          }
+
+          if ((i <= n && j > n)
+              && (clientType[i] == vehiclesTypes[k].type)
+              && (j == d)
+          ) {
+            arcsX[i][j][k][d] = true;
+          }
+          
+        }
+      }
+    }
+  }
+
+  for(int i = 1; i <= n+m; i++) {
+    for(int j = 1; j <= n+m; j++) {
+      if (i == j) {
+        continue;
+      }
+
+      if (i <= n && j <= n) {
+        arcsY[i][j] = true;
+      }
+      if (i > n && j <= n) {
+        arcsY[i][j] = true;
+      }
+    }
+  }
+
+  for(int i = 1; i <= n+m; i++) {
+    for(int j = 1; j <= n+m; j++) {
+      for(int k = 1; k <= v; k++) {
+        for(int d = n+1; d <= n+m; d++) {
+          if (arcsX[i][j][k][d]) {
+            cout << "arcsX[" << i << "][" << j << "][" << k << "][" << d << "]\n";
+          }
+        }
+      }
+    }
+  }
+  std::cout << "\n";
+  for(int i = 1; i <= n+m; i++) {
+    for(int j = 1; j <= n+m; j++) {
+      if (arcsY[i][j]) {
+        cout << "arcsY[" << i << "][" << j << "]\n";
+      }
+    }
+  }
 }
 
 void Data::print(){
@@ -96,20 +177,20 @@ void Data::print(){
     }
     cout << endl;
   }
-  std::cout << "\nMaxCap: " << maxCap << "\n\n";
+  cout << "\nMaxCap: " << maxCap << "\n\n";
 }
 
 void Data::printRoute(){
   for (size_t i = 1; i <= n+m; i++) {
     for (size_t j = 1; j <= 2; j++) {
-      // std::cout << route[i][j] << " ";
+      // cout << route[i][j] << " ";
     }
-    // std::cout << '\n';
+    // cout << '\n';
   }
 
   int position = n+1;
   for (size_t i = 1; i <= n+m; i++) {
-    std::cout << route[position][1] << " (B: ";
+    cout << route[position][1] << " (B: ";
     position = route[position][2];
   }
 

@@ -6,8 +6,11 @@
 #include <stdio.h>
 #include <fstream>
 
+using namespace std;
+
 struct vehicle {
   int cap;
+  int type;
   float fixed;
   float variable;
 };
@@ -20,16 +23,21 @@ struct tw {
 class Data {
 public:
   int n, v, m, maxCap;
-  std::vector<vehicle> vehiclesTypes;
-  std::vector<std::vector<int> > vehiclesInDepot;
-  std::vector<int> customersDemand;
-  std::vector<std::vector<double> > matrixDist;
-  std::vector<std::vector<double> > matrixTime;
-  std::vector<tw> timeWindow;
-  std::vector<std::vector<int> > route;
+  vector<vehicle> vehiclesTypes;
+  vector<vector<int> > vehiclesInDepot;
+  vector<int> customersDemand;
+  vector<int> clientType;
+  vector<vector<double> > matrixDist;
+  vector<vector<double> > matrixTime;
+  vector<tw> timeWindow;
+  vector<vector<int> > route;
+
+  vector< vector< vector< vector<bool>>>> arcsX;
+  vector< vector<bool>> arcsY;
 
   Data(const char* path);
   void print();
+  void calcArcs();
   void printRoute();
 };
 
