@@ -5,10 +5,12 @@
 void solve(Data& data);
 
 int main(int argc, char **argv){
-  Data data(argv[1]);
+  Data data;
+  data.readVSP(argv[1]);
   data.print();
-  data.calcArcs();
-  solve(data);
+  // data.calcArcs();
+
+  // solve(data);
   return 0;
 }
 

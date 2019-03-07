@@ -18,24 +18,41 @@ struct vehicle {
 struct tw {
   int start;
   int end;
+  int serviceTime;
+};
+
+struct crd {
+  float x;
+  float y;
+};
+
+class Client {
+public:
+  int taskType;
+  tw timeW;
+  vector<bool> days;
+  vector<bool> vehicles;
 };
 
 class Data {
 public:
-  int n, v, m, maxCap;
+  int n, v, m, h, maxCap;
   vector<vehicle> vehiclesTypes;
   vector<vector<int> > vehiclesInDepot;
-  vector<int> customersDemand;
-  vector<int> clientType;
+  vector<Client> clts;
+  
+  vector<vector<int> > route;
+
+  vector<crd> coord;
   vector<vector<double> > matrixDist;
   vector<vector<double> > matrixTime;
-  vector<tw> timeWindow;
-  vector<vector<int> > route;
 
   vector< vector< vector< vector<bool>>>> arcsX;
   vector< vector<bool>> arcsY;
 
-  Data(const char* path);
+  Data() = default;
+  void readBS(const char* path);
+  void readVSP(const char* path);
   void print();
   void calcArcs();
   void printRoute();

@@ -14,11 +14,11 @@ LIBFORMAT = static_pic
 
 ####diretorios com as libs do cplex
 ifeq ($(SYS),Darwin)
-	CPLEXDIR      = /Users/VitorVesello/ILOG/CPLEX_Studio126/cplex
-	CONCERTDIR    = /Users/VitorVesello/ILOG/CPLEX_Studio126/concert
+	CPLEXDIR      = /Users/VitorVesello/ILOG/CPLEX_Studio128/cplex
+	CONCERTDIR    = /Users/VitorVesello/ILOG/CPLEX_Studio128/concert
 else
-	CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
-	CONCERTDIR    = /opt/ibm/ILOG/CPLEX_Studio1271/concert
+	CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio128/cplex
+	CONCERTDIR    = /opt/ibm/ILOG/CPLEX_Studio128/concert
 endif
 
 CPLEXLIBDIR   = $(CPLEXDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
@@ -62,7 +62,7 @@ OBJS = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))
 #### regra principal, gera o executavel
 rsa: $(OBJS)
 	@echo  "\033[31m \nLinking all object files: \033[0m"
-	$(CPPC) $(BITS_OPTION) $(OBJS) -o $@ $(CCLNFLAGS)
+	$(CPPC) $(BITS_OPTION) $(OBJS) -o $@ $(CCLNFLAGS) -ldl
 ############################
 
 	@echo  "\033[34m \nMakefile: $(SYS) \033[0m"
