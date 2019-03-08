@@ -6,11 +6,11 @@ void solve(Data& data);
 
 int main(int argc, char **argv){
   Data data;
-  data.readVSP(argv[1]);
-  data.print();
-  // data.calcArcs();
+  data.readInstance(argv[1]);
+  // data.print();
+  data.calcArcs();
 
-  // solve(data);
+  solve(data);
   return 0;
 }
 
@@ -22,23 +22,25 @@ void solve(Data& data){
   long long int bigM = 99999999999;
 
   // Decision variable
-  IloArray <IloArray < IloArray< IloBoolVarArray > > > X (env, limit+1);
+  IloArray <IloArray < IloArray< IloArray < IloBoolVarArray > > > > X (env, limit+1);
   for (int i = 1; i <= limit; i++) {
-    X[i] = IloArray <IloArray<IloBoolVarArray> > (env, limit+1);
+    X[i] = IloArray <IloArray< IloArray<IloBoolVarArray>> > (env, limit+1);
     for (int j = 1; j <= limit; j++) {
-      X[i][j] = IloArray<IloBoolVarArray> (env, data.v+1);
+      X[i][j] = IloArray<IloArray<IloBoolVarArray>> (env, data.v+1);
       for (int k = 1; k <= data.v; k++) {
-        X[i][j][k] = IloBoolVarArray(env, limit+1);
+        X[i][j][k] = IloArray<IloBoolVarArray> (env, limit+1);
         for (int d = data.n+1; d <= limit; d++) {
-          if (data.arcsX[i][j][k][d]) {
-            char name[20];
-            sprintf(name, "X(%d,%d,%d,%d)", i, j, k, d);
-            X[i][j][k][d].setName(name);
-            model.add(X[i][j][k][d]);
-          }         
+          X[i][j][k][d] = IloBoolVarArray(env, data.h+1);
+          for(int day = 1; day <= data.h; day++) {
+            if (data.arcsX[i][j][k][d][day]) {
+              char name[20];
+              sprintf(name, "X(%d,%d,%d,%d,%d)", i, j, k, d, day);
+              X[i][j][k][d][day].setName(name);
+              model.add(X[i][j][k][d][day]);
+            }
+          }
         }
       }
-
     }
   }
 
@@ -55,7 +57,7 @@ void solve(Data& data){
   // Flow variable
 	IloArray <IloNumVarArray>  f(env, limit+1);
 	for(int i = 1; i <= limit; i++){
-		f[i] = IloNumVarArray(env, limit+1, 0, data.maxCap);
+		f[i] = IloNumVarArray(env, limit+1, 0, 99999);
 		for(int j = 1; j <= limit; j++){
       if (data.arcsY[i][j]) {
         char name[20];
@@ -68,32 +70,20 @@ void solve(Data& data){
 
   // FO
   IloExpr OBJ(env);
-  for (size_t d = data.n+1; d <= limit; d++) {
-    for (size_t k = 1; k <= data.v; k++) {
-      IloExpr expr(env);
-      for (size_t i = data.n+1; i <= limit; i++) {
-        for (size_t j = 1; j <= data.n; j++) {
-          if(data.arcsX[i][j][k][d]) {
-            expr += X[i][j][k][d];
-          }
-        }
-      }
-      OBJ += data.vehiclesTypes[k].fixed * expr;
-    }
-  }
-
   for (int i = 1; i <= limit; i++) {
     for (int j = 1; j <= limit; j++) {
       for (int k = 1; k <= data.v; k++) {
         for (int d = data.n+1; d <= limit; d++) {
-          if (data.arcsX[i][j][k][d]) {
-            OBJ += data.vehiclesTypes[k].variable * data.matrixDist[i][j] * X[i][j][k][d];
+          for(size_t l = 1; l <= data.h; l++) {
+            if (data.arcsX[i][j][k][d][l]) {
+              OBJ += data.matrixDist[i][j] * X[i][j][k][d][l];
+            }
           }
         }
       }
     }
   }
-  model.add(IloMinimize(env, OBJ));  
+  model.add(IloMinimize(env, OBJ));
 
   // (2) cada cliente é visitado apenas uma vez
   for (int j = 1; j <= data.n; j++) {
@@ -101,8 +91,10 @@ void solve(Data& data){
     for (int i = 1; i <= limit; i++) {
       for (int k = 1; k <= data.v; k++) {
         for (int d = data.n+1; d <= limit; d++) {
-          if (data.arcsX[i][j][k][d]) {
-            expr1 += X[i][j][k][d];
+          for(size_t l = 1; l <= data.h; l++) {
+            if (data.arcsX[i][j][k][d][l]) {
+              expr1 += X[i][j][k][d][l];
+            }
           }
         }
       }
@@ -120,8 +112,10 @@ void solve(Data& data){
     for (int j = 1; j <= limit; j++) {
       for (int k = 1; k <= data.v; k++) {
         for (int d = data.n+1; d <= limit; d++) {
-          if (data.arcsX[i][j][k][d]) {
-            expr1 += X[i][j][k][d];
+          for(size_t l = 1; l <= data.h; l++) {
+            if (data.arcsX[i][j][k][d][l]) {
+              expr1 += X[i][j][k][d][l];
+            }
           }
         }
       }
@@ -138,28 +132,30 @@ void solve(Data& data){
   for (int k = 1; k <= data.v; k++) {
     for (int j = 1; j <= limit; j++) {
       for (int d = data.n+1; d <= limit; d++) {
-        added = false;
-        IloExpr expr(env);
-        for (int i = 1; i <= limit; i++) {
-          if (data.arcsX[i][j][k][d]) {
-            added = true;
-            expr += X[i][j][k][d];
+        for(int l = 1; l <= data.h; l++) {
+          added = false;
+          IloExpr expr(env);
+          for (int i = 1; i <= limit; i++) {
+            if (data.arcsX[i][j][k][d][l]) {
+              added = true;
+              expr += X[i][j][k][d][l];
+            }
           }
-        }
 
-        for (int i = 1; i <= limit; i++) {
-          if (data.arcsX[i][j][k][d]) {
-            added = true;
-            expr -= X[j][i][k][d];
+          for (int i = 1; i <= limit; i++) {
+            if (data.arcsX[i][j][k][d][l]) {
+              added = true;
+              expr -= X[j][i][k][d][l];
+            }
           }
-        }
 
-        if (added) {
-          IloRange r = (expr == 0);
-          char c[100];
-          sprintf(c, "c4_%d_%d_%d", k, j, d);
-          r.setName(c);
-          model.add(r);
+          if (added) {
+            IloRange r = (expr == 0);
+            char c[100];
+            sprintf(c, "c4_%d_%d_%d_%d", k, j, d, l);
+            r.setName(c);
+            model.add(r);
+          }
         }
       }
     }
@@ -183,6 +179,7 @@ void solve(Data& data){
   sprintf(c, "c5");
   r.setName(c);
   model.add(r);
+
 
   // (6) carga no carro = carga ants de passar no cliente + demanda
   //     conservação de fluxo
@@ -217,9 +214,11 @@ void solve(Data& data){
       added = false;
       for (int k = 1; k <= data.v; k++) {
         for (int d = data.n+1; d <= limit; d++) {
-          if (data.arcsX[i][j][k][d]) {
-            expr += data.vehiclesTypes[k].cap * X[i][j][k][d];
-            added = true;
+          for(int l = 1; l <= data.h; l++) {
+            if (data.arcsX[i][j][k][d][l]) {
+              expr += data.vehiclesTypes[k].cap * X[i][j][k][d][l];
+              added = true;
+            }
           }
         }
       }
@@ -255,9 +254,11 @@ void solve(Data& data){
       added = false;
       for (int d = data.n+1; d <= limit; d++) {
         for (int k = 1; k <= data.v; k++) {
-          if (data.arcsX[i][j][k][d]) {
-            expr += (data.vehiclesTypes[k].cap - data.customersDemand[i]) * X[i][j][k][d];
-            added = true;
+          for(int l = 1; l <= data.h; l++) {
+            if (data.arcsX[i][j][k][d][l]) {
+              expr += (data.vehiclesTypes[k].cap - data.customersDemand[i]) * X[i][j][k][d][l];
+              added = true;
+            }
           }
         }
       }
@@ -271,6 +272,7 @@ void solve(Data& data){
     }
   }
 
+
   // (13)
   for (int i = 1; i <= data.n; i++) {
     for (int j = 1; j <= data.n; j++) {
@@ -278,9 +280,11 @@ void solve(Data& data){
       added = false;
       for (int k = 1; k <= data.v; k++) {
         for (int d = data.n+1; d <= limit; d++) {
-          if (data.arcsX[i][j][k][d]) {
-            expr += data.customersDemand[j] * X[i][j][k][d];
-            added = true;
+          for(int l = 0; l < data.h; l++) {
+            if (data.arcsX[i][j][k][d][l]) {
+              expr += data.customersDemand[j] * X[i][j][k][d][l];
+              added = true;
+            }
           }
         }
       }
@@ -294,84 +298,84 @@ void solve(Data& data){
     }
   }
 
-  // // (14) -------------------------------------------------
-  // for (int i = 1; i <= data.n; i++) {
-  //   for (int j = data.n+1; j <= limit; j++) {
-  //     IloExpr expr(env);
-  //     if (data.arcsY[i][j]) {
-  //       expr = f[i][j];
-  //     }
-  //     IloRange r = (expr == 0);
-  //     char c[100];
-  //     sprintf(c, "c14_%d_%d", i, j);
-  //     r.setName(c);
-  //     model.add(r);
-  //   }
-  // }
+  // // // (14) -------------------------------------------------
+  // // for (int i = 1; i <= data.n; i++) {
+  // //   for (int j = data.n+1; j <= limit; j++) {
+  // //     IloExpr expr(env);
+  // //     if (data.arcsY[i][j]) {
+  // //       expr = f[i][j];
+  // //     }
+  // //     IloRange r = (expr == 0);
+  // //     char c[100];
+  // //     sprintf(c, "c14_%d_%d", i, j);
+  // //     r.setName(c);
+  // //     model.add(r);
+  // //   }
+  // // }
 
-  // // (15)
-  // for (int i = data.n+1; i <= limit; i++) {
-  //   for (int j = data.n+1; j <= limit; j++) {
-  //     IloExpr expr(env);
-  //     if (data.arcsY[i][j]) {
-  //       expr += f[i][j];
-  //     }
-  //     IloRange r = (expr == 0);
-  //     char c[100];
-  //     sprintf(c, "c15_%d_%d", i, j);
-  //     r.setName(c);
-  //     model.add(r);
-  //   }
-  // }
+  // // // (15)
+  // // for (int i = data.n+1; i <= limit; i++) {
+  // //   for (int j = data.n+1; j <= limit; j++) {
+  // //     IloExpr expr(env);
+  // //     if (data.arcsY[i][j]) {
+  // //       expr += f[i][j];
+  // //     }
+  // //     IloRange r = (expr == 0);
+  // //     char c[100];
+  // //     sprintf(c, "c15_%d_%d", i, j);
+  // //     r.setName(c);
+  // //     model.add(r);
+  // //   }
+  // // }
 
-  // // (16)
-  // for (int i = 1; i <= data.n; i++) {
-  //   IloExpr expr(env);
-  //   if (data.arcsY[i][i]) {
-  //     expr += f[i][i];
-  //   }
-  //   IloRange r = (expr == 0);
-  //   char c[100];
-  //   sprintf(c, "c16_%d", i);
-  //   r.setName(c);
-  //   model.add(r);
-  // }
+  // // // (16)
+  // // for (int i = 1; i <= data.n; i++) {
+  // //   IloExpr expr(env);
+  // //   if (data.arcsY[i][i]) {
+  // //     expr += f[i][i];
+  // //   }
+  // //   IloRange r = (expr == 0);
+  // //   char c[100];
+  // //   sprintf(c, "c16_%d", i);
+  // //   r.setName(c);
+  // //   model.add(r);
+  // // }
 
-  // // (17)
-  // for (int i = data.n+1; i <= limit; i++) {
-  //   for (int j = data.n+1; j <= limit; j++) {
-  //     for (int k = 1; k <= data.v; k++) {
-  //       for (int d = data.n+1; d <= limit; d++) {
-  //         IloExpr expr(env);
-  //         if (data.arcsX[i][j][k][d]) {
-  //           expr += X[i][j][k][d];
-  //         }
-  //         IloRange r = (expr == 0);
-  //         char c[100];
-  //         sprintf(c, "c17_%d_%d_%d_%d", i,j,k,d);
-  //         r.setName(c);
-  //         model.add(r);
-  //       }
-  //     }
-  //   }
-  // }
+  // // // (17)
+  // // for (int i = data.n+1; i <= limit; i++) {
+  // //   for (int j = data.n+1; j <= limit; j++) {
+  // //     for (int k = 1; k <= data.v; k++) {
+  // //       for (int d = data.n+1; d <= limit; d++) {
+  // //         IloExpr expr(env);
+  // //         if (data.arcsX[i][j][k][d]) {
+  // //           expr += X[i][j][k][d];
+  // //         }
+  // //         IloRange r = (expr == 0);
+  // //         char c[100];
+  // //         sprintf(c, "c17_%d_%d_%d_%d", i,j,k,d);
+  // //         r.setName(c);
+  // //         model.add(r);
+  // //       }
+  // //     }
+  // //   }
+  // // }
 
-  // // (18)
-  // for (int i = 1; i <= limit; i++) {
-  //   for (int k = 1; k <= data.v; k++) {
-  //     for (int d = data.n+1; d <= limit; d++) {
-  //       IloExpr expr(env);
-  //       if (data.arcsX[i][i][k][d]) {
-  //         expr += X[i][i][k][d];
-  //       }
-  //       IloRange r = (expr == 0);
-  //       char c[100];
-  //       sprintf(c, "c18_%d_%d_%d_%d", i,i,k,d);
-  //       r.setName(c);
-  //       model.add(r);
-  //     }
-  //   }
-  // }
+  // // // (18)
+  // // for (int i = 1; i <= limit; i++) {
+  // //   for (int k = 1; k <= data.v; k++) {
+  // //     for (int d = data.n+1; d <= limit; d++) {
+  // //       IloExpr expr(env);
+  // //       if (data.arcsX[i][i][k][d]) {
+  // //         expr += X[i][i][k][d];
+  // //       }
+  // //       IloRange r = (expr == 0);
+  // //       char c[100];
+  // //       sprintf(c, "c18_%d_%d_%d_%d", i,i,k,d);
+  // //       r.setName(c);
+  // //       model.add(r);
+  // //     }
+  // //   }
+  // // }
 
   // (19) TW
   for (int i = 1; i <= limit; i++) {
@@ -381,9 +385,11 @@ void solve(Data& data){
 
         for (int k = 1; k <= data.v; k++) {
           for (int d = data.n+1; d <= limit; d++) {
-            if (data.arcsX[i][j][k][d]) {
-              expr += X[i][j][k][d];
-              added = true;
+            for(int l = 1; l < data.h; l++) {
+              if (data.arcsX[i][j][k][d][l]) {
+                expr += X[i][j][k][d][l];
+                added = true;
+              }
             }
           }
         }
@@ -417,7 +423,7 @@ void solve(Data& data){
 
 
   IloCplex mdhfvrp(model);
-	mdhfvrp.exportModel("new_vsp.lp");
+	mdhfvrp.exportModel("vsp.lp");
   mdhfvrp.setParam(IloCplex::Threads, 1);
 
   mdhfvrp.solve();
@@ -425,13 +431,15 @@ void solve(Data& data){
   // std::cout << '\n';
   // for(int k = 1; k <= data.v; ++k){
 	// 	for(int d = data.n+1; d <= limit; ++d){
-	// 		for(int i = 1; i <= limit; ++i){
-	// 			for(int j = 1; j <= limit; ++j){
-  //         if (mdhfvrp.getValue(X[i][j][k][d]) > 0) {
-  //           data.route[i][1] = i;
-  //           data.route[i][2] = j;
-  //           std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << /*" - " << mdhfvrp.getValue(b[j]) <<*/ '\n';
-  //           // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
+  //     for(int l = 1; l <= data.h; l++) {
+  //       for(int i = 1; i <= limit; ++i){
+  //         for(int j = 1; j <= limit; ++j){
+  //           if (mdhfvrp.getValue(X[i][j][k][d][l]) > 0.5) {
+  //             // data.route[i][1] = i;
+  //             // data.route[i][2] = j;
+  //             // std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << /*" - " << mdhfvrp.getValue(b[j]) <<*/ '\n';
+  //             // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d][l]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
+  //           }
   //         }
 	// 			}
 	// 		}
@@ -471,12 +479,12 @@ void solve(Data& data){
   // }
 
 
-  // // std::cout << '\n' << "B" << '\n';
-  // // for (size_t i = 1; i <= data.n; i++) {
-  // //   std::cout << i << " : " << mdhfvrp.getValue(b[i]) << "\n";
-  // // }
+  // std::cout << '\n' << "B" << '\n';
+  // for (size_t i = 1; i <= data.n; i++) {
+  //   std::cout << i << " : " << mdhfvrp.getValue(b[i]) << "\n";
+  // }
 
-  // std::cout << "\nOBJ " << mdhfvrp.getObjValue() << std::endl;
+  std::cout << "\nOBJ " << mdhfvrp.getObjValue() << std::endl;
 
 }
 

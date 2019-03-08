@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <iostream>
+#include <boost/dynamic_bitset.hpp>
+#include <string>
+#include <math.h>
 #include <stdio.h>
 #include <fstream>
 
@@ -26,33 +29,29 @@ struct crd {
   float y;
 };
 
-class Client {
-public:
-  int taskType;
-  tw timeW;
-  vector<bool> days;
-  vector<bool> vehicles;
-};
-
 class Data {
 public:
-  int n, v, m, h, maxCap;
+  int n, v, m, h;
   vector<vehicle> vehiclesTypes;
   vector<vector<int> > vehiclesInDepot;
-  vector<Client> clts;
   
-  vector<vector<int> > route;
-
   vector<crd> coord;
+  vector<tw> timeWindow;
+  vector<int> clientType;
+  vector<int> customersDemand;
+  vector<vector<bool>> daysToAttend;
+  vector<vector<bool>> vehiclesToAttend;
+
   vector<vector<double> > matrixDist;
   vector<vector<double> > matrixTime;
 
-  vector< vector< vector< vector<bool>>>> arcsX;
+  vector< vector< vector< vector<vector<bool>>>>> arcsX;
   vector< vector<bool>> arcsY;
+  vector<vector<int> > route;
 
   Data() = default;
-  void readBS(const char* path);
-  void readVSP(const char* path);
+  void readInstance(const char* path);
+  double calcDistEucl(crd pt1, crd pt2);
   void print();
   void calcArcs();
   void printRoute();
