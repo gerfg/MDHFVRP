@@ -35,7 +35,7 @@ void Data::readInstance(const char* path) {
   for (size_t i = n+1; i <= n+m; i++) {
     f >> coord[i].x;
     f >> coord[i].y;
-    customersDemand[i] = 1;
+    customersDemand[i] = 0;
     for (size_t j = 1; j <= v; j++) {
       f >> vehiclesInDepot[i][j];
     }
@@ -49,6 +49,7 @@ void Data::readInstance(const char* path) {
     f >> timeWindow[i].serviceTime;
     f >> timeWindow[i].start;
     f >> timeWindow[i].end;
+    customersDemand[i] = 1;
 
     f >> aux;
     int iter = 1;

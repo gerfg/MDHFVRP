@@ -7,7 +7,7 @@ void solve(Data& data);
 int main(int argc, char **argv){
   Data data;
   data.readInstance(argv[1]);
-  // data.print();
+  data.print();
   data.calcArcs();
 
   solve(data);
@@ -126,7 +126,7 @@ void solve(Data& data){
 		r.setName(c);
 		model.add(r);
   }
-
+/*
   // (4)
   bool added = false;
   for (int k = 1; k <= data.v; k++) {
@@ -421,6 +421,7 @@ void solve(Data& data){
     model.add(r);
   }
 
+*/
 
   IloCplex mdhfvrp(model);
 	mdhfvrp.exportModel("vsp.lp");
@@ -428,24 +429,24 @@ void solve(Data& data){
 
   mdhfvrp.solve();
 
-  // std::cout << '\n';
-  // for(int k = 1; k <= data.v; ++k){
-	// 	for(int d = data.n+1; d <= limit; ++d){
-  //     for(int l = 1; l <= data.h; l++) {
-  //       for(int i = 1; i <= limit; ++i){
-  //         for(int j = 1; j <= limit; ++j){
-  //           if (mdhfvrp.getValue(X[i][j][k][d][l]) > 0.5) {
-  //             // data.route[i][1] = i;
-  //             // data.route[i][2] = j;
-  //             // std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " << mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << /*" - " << mdhfvrp.getValue(b[j]) <<*/ '\n';
-  //             // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d][l]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
-  //           }
-  //         }
-	// 			}
-	// 		}
-	// 	}
-	// }
-
+  std::cout << '\n';
+  for(int l = 1; l <= data.h; l++) {
+    std::cout << "Dia: " << l << "\n";
+    for(int k = 1; k <= data.v; ++k){
+      for(int d = data.n+1; d <= limit; ++d){
+        for(int i = 1; i <= limit; ++i){
+          for(int j = 1; j <= limit; ++j){
+            // if ( (data.arcsX[i][j][k][d][l]) && (mdhfvrp.getValue(X[i][j][k][d][l]) > 0.5) )  {
+              // data.route[i][1] = i;
+              // data.route[i][2] = j;
+              // std::cout << "X[" << i << "][" << j << "] Veiculo: " << k << " do depot: " << d << " f-> " /*<< mdhfvrp.getValue(f[i][j]) << "  B[" << j << "]->" << mdhfvrp.getValue(b[j]) << " - " << mdhfvrp.getValue(b[j])*/ << '\n';
+              // std::cout << "X[" << i << "][" << j << "]: " << mdhfvrp.getValue(X[i][j][k][d][l]) << " f-> " << mdhfvrp.getValue(f[i][j]) << '\n';
+            // }
+          }
+				}
+			}
+		}
+	}
   // std::cout << '\n';
   // // Print only Route
   // int position = data.n+1;
