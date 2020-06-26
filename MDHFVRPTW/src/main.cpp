@@ -500,35 +500,3 @@ void solve(Data& data){
   std::cout << "\nOBJ " << mdhfvrp.getObjValue() << std::endl;
 
 }
-
-
-/*
-o processo é o seguinte
-gera-se uma instância de brinquedo
-no arquivo
-
-aí implementa-se o leitor
-
-joga tudo num struct
-ou classe
-Data
-
-aí cria a função pra gerar o lp
-(e talvez rodar)
-
-aí passa lá o data pra função
-
-define as variaveis e cria a FO
-
-exporta o .lp
-
-checa
-se tem nexo
-
-depois joga o 1o grupo de restrições
-
-checa o .lp
-
-e assim por diante
-vai fazendo incrementalmente
-*/
